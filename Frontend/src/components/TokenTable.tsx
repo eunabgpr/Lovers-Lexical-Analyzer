@@ -38,9 +38,9 @@ export default function TokenTable({
     <div className="tokens">
       <div className="tokens__head">
         <div className="tokens__th">Lexeme</div>
-        <div className="tokens__th">Tokenizer</div>
+        <div className="tokens__th">Token</div>
         <div className="tokens__th">
-          Token
+          Token Type
           {lastRunAt && (
             <span className="tokens__meta">
             </span>

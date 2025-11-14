@@ -1,0 +1,111 @@
+/* === Token table — visual styling inspired by provided design === */
+.tokens{
+  display:flex;flex-direction:column;
+  width:100%;height:100%;
+  padding:10px;                   /* gap between shell and inner surface */
+  background: var(--shell, #875656);
+  border:1px solid var(--shell-border, #6b3b3b);
+  border-radius:12px;
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,.35),
+    0 0 8px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+
+.tokens__head,
+.tokens__body{
+  background: var(--surface, #1d0404);
+}
+
+/* header row (dark bar) */
+.tokens__head {
+    flex: 0 0 auto;     /* header keeps natural height */
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--header);
+  color: var(--muted);
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+}
+
+.tokens__th{ padding:6px 8px; }
+
+
+/* body — scrollable list */
+.tokens__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* individual row */
+.tokens__row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  color: var(--muted);
+  background: #875656;
+  min-width: 0;
+}
+
+.tokens__row.is-alt {
+  background: #CA9797;
+}
+
+.tokens__cell {
+  padding: 2px 6px;
+  font-family: var(--mono, monospace);
+  color: #f5eeee;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tokens__cell--lexeme {
+  font-weight: 600;
+}
+
+.tokens__cell--tokenizer {
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.tokens__cell--token {
+  justify-self: end;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tokens__empty {
+  padding: 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* rounded inner area and custom scrollbar */
+.tokens__body::-webkit-scrollbar {
+  width: 12px;
+}
+.tokens__body::-webkit-scrollbar-track {
+  background: rgba(255, 191, 191, 0.03);
+  border-radius: 8px;
+}
+.tokens__body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255,191,191,0.7), rgba(255,191,191,0.5));
+  border-radius: 8px;
+  border: 3px solid rgba(0,0,0,0.12);
+}
+
+/* small screens: reduce paddings */
+@media (max-width: 600px) {
+  .tokens__head { padding: 10px; }
+  .tokens__body { padding: 8px; gap: 6px; }
+  .tokens__row { padding: 10px; }
+}
+

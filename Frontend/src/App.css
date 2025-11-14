@@ -1,0 +1,102 @@
+/* Make root elements fill the full viewport so the app can use the whole screen */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+/* use border-box everywhere to keep padding inside width calculations */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #f7eaea;
+  display: flex;
+  /* Left-align the app so the editor sits at the leftmost edge */
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-height: 100vh;
+  width: 100vw; /* ensure body spans the viewport width */
+}
+
+
+/* === App layout === */
+.app {
+  width: 100%;
+  max-width: none;
+  /* keep some left spacing but remove right padding so the tokens panel can sit at the rightmost edge */
+  padding: 20px 20px 20px 20px;
+  /* space for the fixed header so content (editor) doesn't sit under it */
+  padding-top: 84px;
+  box-sizing: border-box;
+}
+
+
+.top-row {
+  /* Use an explicit two-column grid: editor (fluid) | tokens (fixed) */
+  display: grid;
+  grid-template-columns: 1fr var(--tokens-width);
+  gap: var(--gap) 50px;
+  align-items: stretch; /* make children equal height */
+  /* space between the top-row (editor + tokens) and the terminal below */
+  margin-bottom: var(--terminal-gap, 16px);
+  /* match the editor fixed height so both panels line up */
+  height: 450px;
+  /* size to the parent .app container; avoid using viewport calcs (100vw) */
+  width: 100%;
+}
+
+
+.panel {
+  box-sizing: border-box;
+  padding: 0; /* panels already have internal padding in their components */
+}
+
+
+
+:root {
+  /* Layout variables — edit these to configure panel spacing and sizes */
+  --tokens-width: 500px; /* width of the tokens panel (right sidebar) */
+  --gap: 2px;           /* horizontal gap between editor (left) and tokens (right) */
+}
+
+.panel--editor {
+  /* Editor should occupy the left (first) grid column and be fluid. */
+  grid-column: 1 / 2;
+  width: 100%;
+  min-width: 0;
+}
+
+.panel--tokens {
+  grid-column: 2 / 3;
+  width: var(--tokens-width);
+  max-width: var(--tokens-width);
+  justify-self: end;
+  height: 100%; /* stick with the editor height */
+  min-height: 0; /* safeguards flex layouts */
+
+}
+
+.panel--terminal {
+  height: px;
+}
+
+/* === Responsive: stack panels on small screens === */
+@media (max-width: 800px) {
+  .top-row {
+    /* Stack into a single column on narrow screens */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    height: auto; /* let panels size naturally when stacked */
+  }
+
+  .panel--editor,
+  .panel--tokens {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  } 
+}
+

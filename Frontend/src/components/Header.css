@@ -1,0 +1,61 @@
+:root{
+  --bg:#381616;
+  --panel:#3a1a1a;
+  --header:#4a2020;
+  --border:#5a2c2c;
+  --text:#f7eaea;
+  --muted:#d8a3a3;
+  --accent:#ffbfbf;
+  --ok:#6BE675;
+  --mono:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.main-header {
+  /* fixed header with explicit height so tab can size to it */
+  --header-height: 65px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--header-height);
+  padding: 0 16px;
+  background: var(--header);
+  color: var(--muted);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+
+/* header bar inside a panel */
+.panel-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:var(--header);
+  border-bottom:1px solid var(--border);
+  color:var(--muted);
+}
+
+
+.tab{
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--header-height) - 12px);
+}
+
+.tab-icon {
+  /* make the icon fill the tab height */
+  height: 100%;
+  width: auto;
+  display: block;
+  transform: scale(0.9);
+  margin: 0;
+}
+/* remove any default image border/outline and ensure transparent background */

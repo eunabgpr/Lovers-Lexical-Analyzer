@@ -1,0 +1,209 @@
+/* --- Main editor container --- */
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  /* Fill the parent panel's fixed height and prevent the editor from growing
+    vertically when tabs or other content expand. Parent (`.top-row`) sets
+    the explicit height (e.g. 600px) so the editor should use 100% of that. */
+  height: 100%;
+  max-height: 100%;
+  max-width: 100%;
+  overflow: hidden;       /* keep extra content inside; textarea will scroll */
+  width: 100%;            /* ensure editor fills its container instead of growing */
+  min-width: 0%;           /* allow the editor to shrink in flex layouts (prevents expansion) */
+  box-sizing: border-box;
+    background: #875656;
+     margin-left: 10px;
+    
+}
+
+/* --- Editor body: gutter + textarea --- */
+.editor__body {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: 100%;
+  overflow: hidden; /* prevent the body from growing; children will scroll internally */
+.editor__body {
+  position: relative; /* allow absolute-positioned overlay inside */
+}
+}
+
+.gutter {
+  flex: 0 0 58px; /* fixed gutter width */
+  background: rgba(0,0,0,0.12);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--muted);
+  font: 14px/1.6 var(--mono);
+  text-align: right;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* hide native scrollbar; textarea will provide the visible scrollbar */
+.line-overlay {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  width: 36px; /* narrower reserved width for compact line numbers */
+  padding: 0 4px;
+  box-sizing: border-box;
+  color: rgba(255,255,255,0.45);
+  font: 13px/1.4 var(--mono);
+  text-align: right;
+  pointer-events: none; /* let clicks pass through to textarea */
+  user-select: none;
+  overflow: hidden; /* clipped; we sync scrollTop with textarea */
+  z-index: 2; /* overlay above textarea content */
+}
+}
+
+.gutter__lines {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0; /* allow the inner block to shrink and be clipped by the gutter */
+  /* ensure the inner lines can be scrolled via scrollTop even when no native scrollbar is shown */
+  overflow: hidden;
+.gutter__lines {
+  overflow: hidden; /* hide native scrollbar; textarea will provide the visible scrollbar */
+}
+}
+
+.gutter__line {
+  height: 1.6em; /* match textarea line-height (14px * 1.6) */
+  box-sizing: border-box;
+  color: rgba(255,255,255,0.55);
+  display: flex;
+  align-items: center;
+.gutter__line {
+  height: 1.4em; /* match textarea line-height (13px * 1.4) */
+  padding-right: 6px;
+  box-sizing: border-box;
+  color: rgba(255,255,255,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-left: 2px;
+}
+}
+
+/* --- Tabs row --- */
+.editor__tabs {
+  display: flex;          /* align tabs in a single row */
+  align-items: center;
+  white-space: nowrap;    /* keep tabs on one line (prevent vertical growth) */
+  background: var(--inner);
+  overflow-x: auto;       /* scroll when tabs overflow horizontally */
+  -webkit-overflow-scrolling: touch;
+  flex: 0 0 auto;         /* don't let tabs row stretch vertically */
+} 
+
+/* Make sure tabs don’t wrap */
+.editor__tab {
+  flex: 0 0 auto;         /* tabs keep intrinsic size and won't force parent to grow */
+  overflow-x: auto;       /* 👈 scroll horizontally */
+  overflow-y: hidden;
+  white-space: nowrap;    /* 👈 prevent wrapping to new lines */
+  scrollbar-width: thin;  
+}
+
+/* --- Tab button --- */
+.editor__tab {
+  display: inline-flex;
+  align-items: center;
+  background: #3a1a1a;
+  color: var(--muted);
+  border-radius: 1px 1px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.editor__tab.is-active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.editor__tabName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* truncate long filenames */
+  display: inline-block;
+  max-width: 160px;        /* limit tab label width */
+}
+
+/* Editor tab rename input: prevent it from expanding the tab row when editing */
+.editor__tabEdit {
+  max-width: 140px;
+  width: 140px;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* --- Add new tab button --- */
+.editor__add {
+  margin-left: auto;
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.editor__add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Monaco custom scrollbar styling: slim dark track with muted rounded thumb */
+.editor__body :where(.monaco-scrollable-element) .scrollbar {
+  background: transparent !important;
+}
+
+.editor__body :where(.monaco-scrollable-element) .scrollbar.vertical {
+  width: 12px !important;
+}
+
+.editor__body :where(.monaco-scrollable-element) .scrollbar .slider {
+  background: linear-gradient(180deg, #630202, #630202) !important;
+  border-radius: 8px !important;
+  width: 8px !important;
+  margin: 6px 2px !important;
+  box-shadow: inset 0 0 0 1px rgba(233, 210, 210, 0.25);
+}
+
+.editor__body :where(.monaco-scrollable-element) .scrollbar .slider:hover {
+  background: linear-gradient(180deg, #630202, #630202) !important;
+}
+
+/* Webkit fallback for embedded scrollable layers */
+.editor__body :where(.monaco-editor) ::-webkit-scrollbar {
+  width: 10px;
+}
+.editor__body :where(.monaco-editor) ::-webkit-scrollbar-thumb {
+  background: #630202;
+  border-radius: 8px;
+  border: 2px solid 630202;
+}
+
+/* hide scrollbar arrows */
+.editor__body :where(.monaco-scrollable-element) .scrollbar .arrow {
+  display: none !important;
+}

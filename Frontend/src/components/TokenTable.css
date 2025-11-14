@@ -21,7 +21,7 @@
 .tokens__head {
     flex: 0 0 auto;     /* header keeps natural height */
   display: grid;
-  grid-template-columns: 1.2fr 1fr auto;
+  grid-template-columns: 1.2fr 1fr 1fr;
   gap: 8px;
   padding: 12px 14px;
   background: var(--header);
@@ -44,7 +44,7 @@
 /* individual row */
 .tokens__row {
   display: grid;
-  grid-template-columns: 1.2fr 1fr auto;
+  grid-template-columns: 1.2fr 1fr 1fr;
   align-items: center;
   gap: 12px;
   padding: 12px;
@@ -71,13 +71,14 @@
   font-weight: 600;
 }
 
-.tokens__cell--tokenizer {
+.tokens__cell--token-value {
   color: var(--text);
   opacity: 0.85;
 }
 
-.tokens__cell--token {
-  justify-self: end;
+.tokens__cell--token-type {
+  justify-self: flex-start;
+  text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

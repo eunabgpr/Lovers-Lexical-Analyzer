@@ -5,7 +5,7 @@ import TokenTable from "./components/TokenTable";
 import Terminal, { type Command } from "./components/Terminals";
 import "./App.css";
 
-type TokenRow = { lexeme: string; tokenizer: string; token: string };
+type TokenRow = { lexeme: string; token: string; tokenType: string };
 type TokenStatus = "idle" | "loading" | "ready" | "error";
 
 const TOKEN_STATUS_LABEL: Record<TokenStatus, string> = {

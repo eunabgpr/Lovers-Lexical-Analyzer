@@ -2,8 +2,8 @@ import "./tokenTable.css";
 
 export type TokenRow = {
   lexeme: string;
-  tokenizer: string;
   token: string;
+  tokenType: string;
 };
 
 export type TokenStatus = "idle" | "loading" | "ready" | "error";
@@ -23,15 +23,15 @@ export default function TokenTable({
 }: TokenTableProps) {
   const hasRows = rows.length > 0;
 
-  const renderTokenizer = (row: TokenRow) => {
-    if (row.token !== "STRING_LITERAL") {
-      return row.tokenizer;
+  const renderToken = (row: TokenRow) => {
+    if (!row.tokenType.includes("STRING")) {
+      return row.token;
     }
     const max = 30;
-    if (row.tokenizer.length <= max) {
-      return row.tokenizer;
+    if (row.token.length <= max) {
+      return row.token;
     }
-    return `${row.tokenizer.slice(0, max - 1)}…`;
+    return `${row.token.slice(0, max - 1)}…`;
   };
 
   return (
@@ -69,11 +69,11 @@ export default function TokenTable({
               <div className="tokens__cell tokens__cell--lexeme">
                 {r.lexeme}
               </div>
-              <div className="tokens__cell tokens__cell--tokenizer">
-                <span title={r.tokenizer}>{renderTokenizer(r)}</span>
+              <div className="tokens__cell tokens__cell--token-value">
+                <span title={r.token}>{renderToken(r)}</span>
               </div>
-              <div className="tokens__cell tokens__cell--token">
-                {r.token}
+              <div className="tokens__cell tokens__cell--token-type">
+                {r.tokenType.toUpperCase()}
               </div>
             </div>
           ))}

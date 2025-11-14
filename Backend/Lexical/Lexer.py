@@ -79,6 +79,44 @@ SINGLE_CHAR_TOKENS = {
     "#": "HASH",
 }
 
+TOKEN_LABEL_OVERRIDES = {
+    "LPAREN": "PAR",
+    "RPAREN": "PAR",
+    "LBRACE": "BRACE",
+    "RBRACE": "BRACE",
+    "LBRACKET": "BRACKET",
+    "RBRACKET": "BRACKET",
+    "GT": "GREATER_THAN",
+    "LT": "LESS_THAN",
+    "SEMICOLON": "TERM",
+}
+
+TOKEN_TYPE_OVERRIDES = {
+    "LPAREN": "BRACKET",
+    "RPAREN": "BRACKET",
+    "LBRACE": "BRACE",
+    "RBRACE": "BRACE",
+    "LBRACKET": "BRACKET",
+    "RBRACKET": "BRACKET",
+    "SEMICOLON": "DELIMITER",
+    "COMMA": "DELIMITER",
+    "COLON": "DELIMITER",
+    "QUESTION": "DELIMITER",
+    "DOT": "DELIMITER",
+    "PLUS": "OPERATOR",
+    "MINUS": "OPERATOR",
+    "STAR": "OPERATOR",
+    "SLASH": "OPERATOR",
+    "PERCENT": "OPERATOR",
+    "ASSIGN": "OPERATOR",
+    "GT": "OPERATOR",
+    "LT": "OPERATOR",
+    "BANG": "OPERATOR",
+    "AMPERSAND": "OPERATOR",
+    "PIPE": "OPERATOR",
+    "HASH": "OPERATOR",
+}
+
 IDENTIFIER_DELIMS = set(valid_delimiters_identifier)
 ALPHA = Literals["alphabet"]
 DIGIT = Literals["digit"]
@@ -258,11 +296,29 @@ def tokenize(source: str) -> List[Token]:
     return Lexer(source).scan_tokens()
 
 def _format_tokenizer(tok: Token) -> str:
-    if tok.cpp_equivalent:
-        return tok.cpp_equivalent
+    if tok.kind == "KEYWORD":
+        return tok.lexeme
+    if tok.kind in {"IDENTIFIER"}:
+        return tok.lexeme
     if tok.literal is not None:
         return tok.literal
-    return tok.lexeme
+    if tok.kind.startswith("OP_"):
+        return tok.kind[3:]
+    return TOKEN_LABEL_OVERRIDES.get(tok.kind, tok.kind)
+
+
+def _token_type(kind: str) -> str:
+    if kind in {"INT_LITERAL"}:
+        return "INT_LIT"
+    if kind in {"FLOAT_LITERAL"}:
+        return "FLOAT_LIT"
+    if kind in {"STRING_LITERAL"}:
+        return "STRING_LIT"
+    if kind in {"CHAR_LITERAL"}:
+        return "CHAR_LIT"
+    if kind in {"BOOL_LITERAL_FALSE", "BOOL_LITERAL_TRUE"}:
+        return "BOOL_LIT"
+    return TOKEN_TYPE_OVERRIDES.get(kind, kind)
 
 
 def tokens_as_rows(tokens: Iterable[Token]) -> List[dict]:
@@ -273,8 +329,8 @@ def tokens_as_rows(tokens: Iterable[Token]) -> List[dict]:
         rows.append(
             {
                 "lexeme": tok.lexeme,
-                "token": tok.kind,
-                "tokenizer": _format_tokenizer(tok),
+                "token": _format_tokenizer(tok),
+                "tokenType": _token_type(tok.kind),
             }
         )
     return rows

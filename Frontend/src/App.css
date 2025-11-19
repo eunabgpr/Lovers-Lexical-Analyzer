@@ -39,7 +39,7 @@ body {
   gap: var(--gap) 50px;
   align-items: stretch; /* make children equal height */
   /* space between the top-row (editor + tokens) and the terminal below */
-  margin-bottom: var(--terminal-gap, 16px);
+  margin-bottom: 16px;
   /* match the editor fixed height so both panels line up */
   height: 450px;
   /* size to the parent .app container; avoid using viewport calcs (100vw) */
@@ -99,4 +99,3 @@ body {
     min-width: 0;
   } 
 }
-

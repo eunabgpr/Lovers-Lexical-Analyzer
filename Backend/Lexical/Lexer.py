@@ -14,7 +14,7 @@ RESERVED_WORDS = {
     "dear": ("KEYWORD_TYPE_INT", "dear"),
     "dearest": ("KEYWORD_TYPE_FLOAT", "dearest"),
     "rant": ("KEYWORD_TYPE_STRING", "rant"),
-    "status": ("KEYWORD_TYPE_BOOL", "bostatusol"),
+    "status": ("KEYWORD_TYPE_BOOL", "status"),
     "forever": ("KEYWORD_IF", "forever"),
     "more": ("KEYWORD_ELSE", "more"),
     "forevermore": ("KEYWORD_ELSEIF", "forevermore"),
@@ -200,7 +200,17 @@ class Lexer:
         while self._is_identifier_part(self._peek()):
             self._advance()
         lexeme = self.source[self.start:self.pos]
+        if len(lexeme) > 20:
+            raise LexerError(
+                f"Identifier `{lexeme}` exceeds the maximum length of 20 characters at {line}:{col}"
+            )
         entry = RESERVED_WORDS.get(lexeme)
+        if entry is None:
+            lowered = lexeme.lower()
+            if lowered in RESERVED_WORDS:
+                raise LexerError(
+                    f"Reserved word `{lowered}` must be written in lowercase at {line}:{col}"
+                )
         if entry:
             kind, cpp_equiv = entry
             literal = cpp_equiv if kind.startswith("BOOL_LITERAL") else None
@@ -225,6 +235,10 @@ class Lexer:
         return Token(token_kind, lexeme, literal=lexeme, line=line, column=col)
 
     def _string_token(self, quote: str, line: int, col: int) -> Token:
+        if quote != '"':
+            raise LexerError(
+                f'String values must be enclosed in double quotes (") at {line}:{col}'
+            )
         escaped = False
         while not self._is_at_end():
             c = self._advance()
@@ -237,8 +251,7 @@ class Lexer:
             if c == quote:
                 lexeme = self.source[self.start:self.pos]
                 inner = lexeme[1:-1]
-                kind = "CHAR_LITERAL" if quote == "'" and len(inner) == 1 else "STRING_LITERAL"
-                return Token(kind, lexeme, literal=inner, line=line, column=col)
+                return Token("STRING_LITERAL", lexeme, literal=inner, line=line, column=col)
             if c == "\n":
                 raise LexerError(f"Unterminated string at {line}:{col}")
         raise LexerError(f"Unterminated string at {line}:{col}")

@@ -18,7 +18,7 @@ const TOKEN_STATUS_LABEL: Record<TokenStatus, string> = {
   error: "Error",
 };
 
-const DEFAULT_SOURCE = `love main() {
+const DEFAULT_SOURCE = `love () {
   express << "hello, lover";
 }
 `;
@@ -32,6 +32,20 @@ const DEFAULT_FILE: FileTab = {
 const LEX_ENDPOINT = import.meta.env.VITE_LEX_ENDPOINT?.trim() || "/lex";
 const VALIDATE_ENDPOINT =
   import.meta.env.VITE_VALIDATE_ENDPOINT?.trim() || "/validate";
+
+async function parseResponseBody(
+  resp: Response
+): Promise<{ data: any; raw: string | null }> {
+  const text = await resp.text();
+  if (!text) {
+    return { data: {}, raw: null };
+  }
+  try {
+    return { data: JSON.parse(text), raw: null };
+  } catch {
+    return { data: {}, raw: text };
+  }
+}
 
 export default function App() {
   const [source, setSource] = useState(DEFAULT_SOURCE);
@@ -61,9 +75,13 @@ export default function App() {
         body: JSON.stringify({ source: body }),
       });
 
-      const payload = await resp.json().catch(() => ({}));
+      const { data: payload, raw } = await parseResponseBody(resp);
       if (!resp.ok) {
-        throw new Error(payload?.error ?? `Request failed (${resp.status})`);
+        const detail =
+          (payload?.error as string | undefined) ??
+          (payload?.message as string | undefined) ??
+          raw?.trim();
+        throw new Error(detail || `Request failed (${resp.status})`);
       }
 
       const nextRows = Array.isArray(payload?.rows)
@@ -109,26 +127,30 @@ useEffect(() => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source: body }),
       });
-      const payload = await resp.json().catch(() => ({}));
+      const { data: payload, raw } = await parseResponseBody(resp);
 
       if (resp.ok && payload?.ok) {
         const success: ValidationResult = {
           ok: true,
-          message: payload?.message ?? "Structure looks valid.",
-          code: payload?.code,
+          message: (payload?.message as string) ?? "Structure looks valid.",
+          code: payload?.code as string | undefined,
         };
         setValidation(success);
         return success;
       }
 
+      const failureMessage =
+        (payload?.message as string | undefined) ??
+        (payload?.error as string | undefined) ??
+        raw?.trim() ??
+        `Validation failed (HTTP ${resp.status})`;
       const failure: ValidationResult = {
         ok: false,
-        message:
-          payload?.message ?? payload?.error ?? "Validation failed unexpectedly.",
-        code: payload?.code,
-        token: payload?.token,
+        message: failureMessage,
+        code: payload?.code as string | undefined,
+        token: payload?.token as ValidationResult["token"],
         expected: Array.isArray(payload?.expected)
-          ? payload.expected
+          ? (payload.expected as string[])
           : undefined,
       };
       setValidation(failure);
@@ -185,14 +207,12 @@ useEffect(() => {
         right={<span className={`status status--${status}`}>{TOKEN_STATUS_LABEL[status]}</span>}
       />
       <main className="app">
-        <div className="top-row">
-          <section className="panel panel--editor">
-            <Editor initialFiles={[DEFAULT_FILE]} onChangeFiles={handleEditorChange} />
-          </section>
-          <section className="panel panel--tokens">
-            <TokenTable rows={rows} status={status} error={error} lastRunAt={lastRunAt} />
-          </section>
-        </div>
+        <section className="panel panel--editor">
+          <Editor initialFiles={[DEFAULT_FILE]} onChangeFiles={handleEditorChange} />
+        </section>
+        <section className="panel panel--tokens">
+          <TokenTable rows={rows} status={status} error={error} lastRunAt={lastRunAt} />
+        </section>
         <section className="panel panel--terminal">
           <Terminal
             prompt="lover"

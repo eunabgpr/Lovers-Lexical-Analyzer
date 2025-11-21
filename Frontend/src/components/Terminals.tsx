@@ -40,29 +40,21 @@ export default function Terminal({
     [commands]
   );
 
-  const [out, setOut] = useState<string[]>([
-    'Lexi Terminal - type "help" for available commands.',
-  ]);
   const [line, setLine] = useState("");
   const [hist, setHist] = useState<string[]>([]);
   const [idx, setIdx] = useState(-1);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [out]);
-
-  useEffect(() => {
-    const el = scrollRef.current?.parentElement;
+    const el = panelRef.current;
     const focus = () => inputRef.current?.focus();
     el?.addEventListener("click", focus);
     return () => el?.removeEventListener("click", focus);
   }, []);
 
   const run = async (src: string) => {
-    setOut((o) => [...o, `$ ${src}`]);
     const cmdline = src.trim();
     if (!cmdline) {
       setLine("");
@@ -71,29 +63,59 @@ export default function Terminal({
 
     const [name, ...args] = splitArgs(cmdline);
     if (name === "clear") {
-      setOut([]);
       setLine("");
       return;
     }
 
     const fn = registry[name];
     if (!fn) {
-      setOut((o) => [...o, `command not found: ${name}`]);
+      console.warn(`command not found: ${name}`);
       setLine("");
       return;
     }
 
     try {
-      const res = await fn(args);
-      if (typeof res === "string" && res.length) {
-        setOut((o) => [...o, res]);
-      }
+      await fn(args);
     } catch (e: any) {
-      setOut((o) => [...o, `error: ${e?.message ?? String(e)}`]);
+      console.error(e?.message ?? String(e));
     } finally {
       setLine("");
     }
   };
+
+  const validationLines = useMemo(() => {
+    if (!validation) {
+      return ['No validation run yet. Type "validate".'];
+    }
+
+    if (!validation.ok) {
+      const lines: string[] = [];
+      const parts: string[] = [];
+      if (validation.token?.line != null && validation.token?.column != null) {
+        parts.push(`line ${validation.token.line}, column ${validation.token.column}`);
+      }
+      if (validation.code) {
+        parts.push(validation.code);
+      }
+      lines.push(parts.length ? `Error (${parts.join(" | ")}):` : "Error:");
+      lines.push(validation.message ?? "Syntax error.");
+      if (validation.token?.lexeme) {
+        lines.push(`Found: ${validation.token.lexeme}`);
+      }
+      if (validation.expected?.length) {
+        lines.push("Expected tokens:");
+        validation.expected.forEach((sym, idx) =>
+          lines.push(`  ${idx + 1}. ${sym}`)
+        );
+      }
+      return lines;
+    }
+
+    const successLabel = validation.code ? `[${validation.code}] ` : "";
+    return [
+      `${successLabel}${validation.message ?? "Structure looks valid."}`,
+    ];
+  }, [validation]);
 
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -121,64 +143,20 @@ export default function Terminal({
     }
   };
 
-  const renderValidation = () => {
-    if (!validation) {
-      return (
-        <div className="term-validation term-validation--placeholder">
-          No validation run yet. Type <code>validate</code>.
-        </div>
-      );
-    }
-    const isError = !validation.ok;
-    const position =
-      validation.token?.line != null && validation.token?.column != null
-        ? `at line ${validation.token.line}, column ${validation.token.column}`
-        : null;
-
-    return (
-      <div className={`term-validation ${isError ? "is-error" : "is-ok"}`}>
-        <div className="term-validation__row">
-          <span className="term-validation__badge">
-            {isError ? "SYNTAX ERROR" : "SYNTAX"}
-          </span>
-          <span className="term-validation__message">
-            {isError ? "Syntax error" : "Structure OK"}
-            {position && (
-              <span className="term-validation__pos"> {position}</span>
-            )}
-            : {validation.message}
-          </span>
-        </div>
-        {isError &&
-          validation.expected &&
-          validation.expected.length > 0 && (
-            <div className="term-validation__expected">
-              <span className="term-validation__expected-label">
-                Expected tokens:
-              </span>
-              <div className="term-validation__chips">
-                {validation.expected.map((sym, idx) => (
-                  <span key={`${sym}-${idx}`} className="term-validation__chip">
-                    {sym}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-      </div>
-    );
-  };
+  const logState = validation
+    ? validation.ok
+      ? "is-ok"
+      : "is-error"
+    : "is-idle";
 
   return (
-    <div
-      className="panel terminal"
-      style={{ display: "grid", gridTemplateRows: "auto 1fr auto" }}
-    >
+    <div className="terminal-panel" ref={panelRef}>
       <div className="header">Terminal</div>
-      {renderValidation()}
-      <div ref={scrollRef} className="term-out" aria-live="polite">
-        {out.map((t, i) => (
-          <div key={i}>{t}</div>
+      <div className={`term-log ${logState}`} aria-live="polite">
+        {validationLines.map((text, idx) => (
+          <div key={`${text}-${idx}`} className="term-log__line">
+            {text}
+          </div>
         ))}
       </div>
 

@@ -18,12 +18,21 @@ DELIM_UNEXPECTED_CODES = {
     "]": "ERR_UNEXPECTED_RBRACKET",
 }
 
+ALLOWED_TYPE_KINDS = {
+    "KEYWORD_TYPE_INT",  # dear
+    "KEYWORD_TYPE_FLOAT",  # dearest
+    "KEYWORD_TYPE_STRING",  # rant
+    "KEYWORD_TYPE_BOOL",  # status
+    "IDENTIFIER",  # user-defined types
+}
+
 
 def validate_program_structure(tokens: List[Token]) -> Dict[str, object]:
     """
     Validates the high-level structure of a Lovers program. Ensures sources start
-    with `love <identifier>() { ... }`, enforces balanced delimiters, and checks that the
-    main block closes the program.
+    with `love <identifier>() { ... }`, permits zero or more C++-style global
+    declarations before `love`, enforces balanced delimiters, and checks that the
+    main block closes the program with nothing after it.
     """
     filtered = [t for t in tokens if t.kind not in IGNORED_KINDS]
     if not filtered:
@@ -31,9 +40,16 @@ def validate_program_structure(tokens: List[Token]) -> Dict[str, object]:
             "ERR_EMPTY", "Source is empty. Expected `love <identifier>() { ... }`."
         )
 
-    idx, err = _consume_main_signature(filtered)
+    idx = 0
+    while idx < len(filtered) and _looks_like_cpp_decl(filtered, idx):
+        idx, err = _consume_cpp_decl(filtered, idx)
+        if err:
+            return err
+
+    consumed, err = _consume_main_signature(filtered[idx:])
     if err:
         return err
+    idx += consumed
 
     err = _check_balanced_delimiters(filtered)
     if err:
@@ -179,3 +195,86 @@ def _ensure_program_ends_after_main(tokens: Sequence[Token], start_idx: int) -> 
         "Missing closing `}` for the `love` block.",
         expected=["}"],
     )
+
+
+def _looks_like_cpp_decl(tokens: Sequence[Token], idx: int) -> bool:
+    """
+    Heuristic: a global declaration starts with a type token and an identifier name.
+    """
+    return (
+        idx + 1 < len(tokens)
+        and tokens[idx].kind in ALLOWED_TYPE_KINDS
+        and tokens[idx + 1].kind == "IDENTIFIER"
+    )
+
+
+def _consume_cpp_decl(tokens: Sequence[Token], idx: int) -> Tuple[int, Dict[str, object] | None]:
+    """
+    Consumes a C++-style global declaration or function definition/prototype.
+    Returns the next index after the declaration and an optional error.
+    """
+    i = idx + 2  # skip type + name
+
+    # Function: type name ( ... ) { ... }  OR prototype: type name ( ... );
+    if i < len(tokens) and tokens[i].lexeme == "(":
+        paren_depth = 1
+        j = i + 1
+        while j < len(tokens) and paren_depth > 0:
+            if tokens[j].lexeme == "(":
+                paren_depth += 1
+            elif tokens[j].lexeme == ")":
+                paren_depth -= 1
+            j += 1
+
+        if paren_depth != 0:
+            offending = tokens[j - 1] if j - 1 < len(tokens) else None
+            return idx, _failure(
+                "ERR_EXPECTED_RPAREN",
+                "Unterminated parameter list in global declaration.",
+                token=offending,
+                expected=[")"],
+            )
+
+        after_paren = j
+        if after_paren < len(tokens) and tokens[after_paren].lexeme == ";":
+            return after_paren + 1, None  # prototype ends here
+
+        if after_paren < len(tokens) and tokens[after_paren].lexeme == "{":
+            brace_depth = 1
+            k = after_paren + 1
+            while k < len(tokens) and brace_depth > 0:
+                if tokens[k].lexeme == "{":
+                    brace_depth += 1
+                elif tokens[k].lexeme == "}":
+                    brace_depth -= 1
+                k += 1
+            if brace_depth != 0:
+                offending = tokens[k - 1] if k - 1 < len(tokens) else None
+                return idx, _failure(
+                    "ERR_EXPECTED_RBRACE",
+                    "Unterminated global function body.",
+                    token=offending,
+                    expected=["}"],
+                )
+            return k, None
+
+        offending = tokens[after_paren] if after_paren < len(tokens) else None
+        return idx, _failure(
+            "ERR_EXPECTED_LBRACE_OR_SEMICOLON",
+            "Expected `{` for function body or `;` for prototype.",
+            token=offending,
+            expected=["{", ";"],
+        )
+
+    # Variable declaration: type name [= ...] ;
+    while i < len(tokens) and tokens[i].lexeme != ";":
+        i += 1
+
+    if i >= len(tokens):
+        return idx, _failure(
+            "ERR_EXPECTED_SEMICOLON",
+            "Missing `;` after global declaration.",
+            expected=[";"],
+        )
+
+    return i + 1, None

@@ -18,7 +18,7 @@ type TokenTableProps = {
 export default function TokenTable({
   rows = [],
   status,
-  error = null,
+  error: _error = null,
   lastRunAt,
 }: TokenTableProps) {
   const hasRows = rows.length > 0;

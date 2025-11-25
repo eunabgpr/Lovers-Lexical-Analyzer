@@ -22,8 +22,7 @@ def chars(items: Iterable[str]) -> Set[str]:
 
 
 set_defs = {
-    "whitespace": {" ", "\t", "\n"},
-    "space_del": {" ", "\t"},
+    "space_del": {" ", "\t", "\n"},
     "symbol_del": {">", "<"},  # can be extended if needed
     "arith_op": {"+", "-", "*", "/", "%", "<", ">"},
     "gen_op": {"+", "-", "*", "/", "%", "<", ">", "=", "!", "&", "|"},
@@ -64,20 +63,20 @@ set_defs = {
 
 reserved_word_follows = {
     # Data Types
-    "dear": {"whitespace"},
-    "dearest": {"whitespace"},
-    "rant": {"whitespace"},
-    "status": {"whitespace"},
+    "dear": {"space_del"},
+    "dearest": {"space_del"},
+    "rant": {"space_del"},
+    "status": {"space_del"},
     # I/O
     "give": {"space_del", ">"},
     "express": {"space_del", "<"},
     "overshare": {"space_del", "("},
     # Conditionals / Loops
-    "for": {"whitespace", "("},
-    "forever": {"whitespace", "("},
-    "forevermore": {"whitespace", "("},
-    "choose": {"whitespace", "("},
-    "more": {"whitespace", "{"},
+    "for": {"space_del", "("},
+    "forever": {"space_del", "("},
+    "forevermore": {"space_del", "("},
+    "choose": {"space_del", "("},
+    "more": {"space_del", "{"},
     "phase": {"space_del", "digit", "'"},
     "bareminimum": {":"},
     "while": {"space_del", "("},
@@ -130,7 +129,7 @@ reserved_symbol_follows = {
     ")": {"space_del", "{", "arith_op", "&", "|"},
     "[": {"space_del", "alphanum"},
     "]": {"space_del", "=", "<", ">"},
-    ";": {"whitespace", "}","\t"},
+    ";": {"space_del", "}","\t"},
     '"': {"space_del", "alphanum", "ascii"},
     "<<": {"space_del", '"', "alphanum", "("},
     ">>": {"space_del", "alphabet"},
@@ -158,7 +157,7 @@ def resolve_set(name: str) -> Set[str]:
         return set(alphanum)
     if name in set_defs:
         return set(set_defs[name])
-    if name == "whitespace":
+    if name == "space_del":
         return {" ", "\t", "\n"}
     if name == "ascii":
         return set(ascii_printable)

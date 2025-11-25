@@ -285,24 +285,6 @@ class Lexer:
                     f"Reserved word `{lexeme}` must be followed by a delimiter at {line}:{col}\n\nExpected: {self._format_expected(allowed)}",
                     self._partial_tokens,
                 )
-            if lexeme == "give":
-                if not self._peek_after_ws_pair(">>"):
-                    raise LexerError(
-                        f"`give` must be followed by `>>` at {line}:{col}",
-                        self._partial_tokens,
-                    )
-            if lexeme == "express":
-                if not self._peek_after_ws_pair("<<"):
-                    raise LexerError(
-                        f"`express` must be followed by `<<` at {line}:{col}",
-                        self._partial_tokens,
-                    )
-            if lexeme == "overshare":
-                if not self._peek_after_ws_pair("<<"):
-                    raise LexerError(
-                        f"`overshare` must be followed by `<<` at {line}:{col}",
-                        self._partial_tokens,
-                    )
             kind, cpp_equiv = entry
             literal = cpp_equiv if kind.startswith("BOOL_LITERAL") else None
             return Token(kind=kind,
@@ -465,15 +447,6 @@ class Lexer:
             return "\0"
         return self.source[i]
 
-    def _peek_after_ws_pair(self, expected: str) -> bool:
-        """Check if the next non-whitespace sequence starts with the given pair (e.g., '>>')."""
-        i = self.pos
-        while i < self.length and self.source[i] in {" ", "\t", "\r"}:
-            i += 1
-        if i + 1 >= self.length:
-            return False
-        return self.source[i] == expected[0] and self.source[i + 1] == expected[1]
-
     def _match(self, expected: str) -> bool:
         if self._is_at_end() or self.source[self.pos] != expected:
             return False
@@ -502,6 +475,8 @@ class Lexer:
 
     def _validate_symbol_follow(self, lexeme: str, line: int, col: int) -> None:
         if lexeme == "=":
+            return
+        if lexeme == ";":
             return
         if lexeme in {">", "<", ">=", "<=", "==", "!=", ">>", "<<", "&&", "||"}:
             return

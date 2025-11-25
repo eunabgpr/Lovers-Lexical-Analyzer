@@ -130,7 +130,7 @@ reserved_symbol_follows = {
     ")": {"space_del", "{", "arith_op", "&", "|"},
     "[": {"space_del", "alphanum"},
     "]": {"space_del", "=", "<", ">"},
-    ";": {"whitespace", "}"},
+    ";": {"whitespace", "}","\t"},
     '"': {"space_del", "alphanum", "ascii"},
     "<<": {"space_del", '"', "alphanum", "("},
     ">>": {"space_del", "alphabet"},

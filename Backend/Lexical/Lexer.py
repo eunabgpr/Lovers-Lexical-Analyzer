@@ -87,30 +87,7 @@ SINGLE_CHAR_TOKENS = {
 }
 
 
-TOKEN_TYPE_OVERRIDES = {
-    "LPAREN": "BRACKET",
-    "RPAREN": "BRACKET",
-    "LBRACE": "BRACE",
-    "RBRACE": "BRACE",
-    "LBRACKET": "BRACKET",
-    "RBRACKET": "BRACKET",
-    "SEMICOLON": "DELIMITER",
-    "COMMA": "DELIMITER",
-    "COLON": "DELIMITER",
-    "DOT": "DELIMITER",
-    "PLUS": "OPERATOR",
-    "MINUS": "OPERATOR",
-    "STAR": "OPERATOR",
-    "SLASH": "OPERATOR",
-    "PERCENT": "OPERATOR",
-    "ASSIGN": "OPERATOR",
-    "GT": "OPERATOR",
-    "LT": "OPERATOR",
-    "BANG": "OPERATOR",
-    "AMPERSAND": "OPERATOR",
-    "PIPE": "OPERATOR",
-    "HASH": "OPERATOR",
-}
+TOKEN_TYPE_OVERRIDES: dict = {}
 
 IDENTIFIER_DELIMS = set(valid_delimiters_identifier)
 ALPHA = Literals["alphabet"]

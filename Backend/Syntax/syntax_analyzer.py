@@ -254,12 +254,27 @@ class Parser:
         if tok.kind == "KEYWORD_IO_OVERSHARE":
             self.overshare_statement()
             return
+        if tok.kind == "KEYWORD_IF":  # forever
+            self.conditional_statement()
+            return
+        if tok.kind in {"KEYWORD_FOR", "KEYWORD_WHILE", "KEYWORD_DO_WHILE"}:
+            self.loop_state()
+            return
+        if tok.kind == "KEYWORD_SWITCH":  # choose
+            self.choose_state()
+            return
+        if tok.kind in {"KEYWORD_BREAK", "KEYWORD_CONTINUE"}:
+            self.control_flow_statement()
+            return
+        if tok.kind == "KEYWORD_RETURN":
+            self.comeback_statement()
+            return
 
         # Expression statement
         self.expr()
         self.skip_newlines()
         if not self.ts.match("SEMICOLON"):
-            self.error(self.ts.peek(), "Expected ';' after statement", [";"])
+            self.error(self.ts.peek(), "Expected ';' after statement", [";", "}"])
 
     # --- Expressions with precedence ---------------------------------------
 
@@ -390,6 +405,117 @@ class Parser:
         self.expr()
         while self.ts.match("COMMA"):
             self.expr()
+
+    # --- Conditionals / loops / switch -------------------------------------
+
+    def conditional_statement(self) -> None:
+        # forever (cond) { body } [forevermore (cond){body}] [more {body}]
+        self.ts.advance()  # forever
+        if not self.ts.match("LPAREN"):
+            self.error(self.ts.peek(), "Expected '(' after forever", ["("])
+        else:
+            self.expr()
+            if not self.ts.match("RPAREN"):
+                self.error(self.ts.peek(), "Expected ')' after condition", [")"])
+        self.block()
+        while self.ts.peek().kind == "KEYWORD_ELSEIF":
+            self.ts.advance()
+            if not self.ts.match("LPAREN"):
+                self.error(self.ts.peek(), "Expected '(' after forevermore", ["("])
+            else:
+                self.expr()
+                if not self.ts.match("RPAREN"):
+                    self.error(self.ts.peek(), "Expected ')' after condition", [")"])
+            self.block()
+        if self.ts.peek().kind == "KEYWORD_ELSE":
+            self.ts.advance()
+            self.block()
+
+    def loop_state(self) -> None:
+        kind = self.ts.peek().kind
+        if kind == "KEYWORD_FOR":
+            self.ts.advance()
+            if not self.ts.match("LPAREN"):
+                self.error(self.ts.peek(), "Expected '(' after for", ["("])
+            else:
+                # init
+                if self.ts.peek().kind.startswith("KEYWORD_TYPE"):
+                    self.declaration()
+                else:
+                    self.expr()
+                    if not self.ts.match("SEMICOLON"):
+                        self.error(self.ts.peek(), "Expected ';' after for init", [";"])
+                # condition
+                self.expr()
+                if not self.ts.match("SEMICOLON"):
+                    self.error(self.ts.peek(), "Expected ';' after for condition", [";"])
+                # update
+                self.expr()
+                if not self.ts.match("RPAREN"):
+                    self.error(self.ts.peek(), "Expected ')' after for update", [")"])
+            self.block()
+        elif kind == "KEYWORD_WHILE":
+            self.ts.advance()
+            if not self.ts.match("LPAREN"):
+                self.error(self.ts.peek(), "Expected '(' after while", ["("])
+            else:
+                self.expr()
+                if not self.ts.match("RPAREN"):
+                    self.error(self.ts.peek(), "Expected ')' after condition", [")"])
+            self.block()
+        elif kind == "KEYWORD_DO_WHILE":
+            self.ts.advance()
+            self.block()
+            if not self.ts.match("KEYWORD_WHILE"):
+                self.error(self.ts.peek(), "Expected 'while' after pursue block", ["while"])
+            else:
+                if not self.ts.match("LPAREN"):
+                    self.error(self.ts.peek(), "Expected '(' after while", ["("])
+                else:
+                    self.expr()
+                    if not self.ts.match("RPAREN"):
+                        self.error(self.ts.peek(), "Expected ')' after condition", [")"])
+                if not self.ts.match("SEMICOLON"):
+                    self.error(self.ts.peek(), "Expected ';' after pursue while", [";"])
+
+    def choose_state(self) -> None:
+        # choose (expr) { cases bareminimum? }
+        self.ts.advance()
+        if not self.ts.match("LPAREN"):
+            self.error(self.ts.peek(), "Expected '(' after choose", ["("])
+        else:
+            self.expr()
+            if not self.ts.match("RPAREN"):
+                self.error(self.ts.peek(), "Expected ')' after choose expr", [")"])
+        if not self.ts.match("LBRACE"):
+            self.error(self.ts.peek(), "Expected '{' after choose", ["{"])
+            return
+        while self.ts.peek().lexeme == "phase":
+            self.ts.advance()
+            self.expr()
+            if not self.ts.match("COLON"):
+                self.error(self.ts.peek(), "Expected ':' after phase value", [":"])
+            self.block()
+        if self.ts.peek().lexeme == "bareminimum":
+            self.ts.advance()
+            if not self.ts.match("COLON"):
+                self.error(self.ts.peek(), "Expected ':' after bareminimum", [":"])
+            self.block()
+        if not self.ts.match("RBRACE"):
+            self.error(self.ts.peek(), "Expected '}' after choose cases", ["}"])
+
+    def control_flow_statement(self) -> None:
+        # breakup ; | moveon ;
+        self.ts.advance()
+        if not self.ts.match("SEMICOLON"):
+            self.error(self.ts.peek(), "Expected ';' after control flow statement", [";"])
+
+    def comeback_statement(self) -> None:
+        self.ts.advance()
+        if self.ts.peek().kind != "SEMICOLON":
+            self.expr()
+        if not self.ts.match("SEMICOLON"):
+            self.error(self.ts.peek(), "Expected ';' after return", [";"])
 
     def postfix(self) -> None:
         while True:

@@ -169,6 +169,12 @@ class Lexer:
         if ch == "\n":
             tokens.append(Token("NEWLINE", "\\n", line=start_line, column=start_col))
             return
+        # Treat a literal backslash-n sequence as a newline token.
+        # This allows showing "\\n" explicitly in lexer output without
+        # emitting tokens for actual line breaks.
+        if ch == "\\" and self._match("n"):
+            tokens.append(Token("NEWLINE", "\\n", line=start_line, column=start_col))
+            return
         if ch == "/" and self._match("/"):
             self._skip_line_comment()
             return
@@ -480,8 +486,15 @@ def _format_tokenizer(tok: Token) -> str:
         ",": "comma",
     }
     # Display lexeme for all tokens (literals use their inner value).
+    # For UI readability, render control characters as escape sequences.
     if tok.literal is not None:
-        return tok.literal
+        return (
+            tok.literal
+            .replace("\\", "\\\\")
+            .replace("\n", "\\n")
+            .replace("\t", "\\t")
+            .replace("\r", "\\r")
+        )
     return display_name_overrides.get(tok.lexeme, tok.lexeme)
 
 

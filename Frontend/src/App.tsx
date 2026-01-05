@@ -55,7 +55,7 @@ export default function App() {
 
   const lexSource = useCallback(async (text: string) => {
     const body = text ?? "";
-    if (!body.trim()) {
+    if (!body.length) {
       setRows([]);
       setStatus("idle");
       setError(null);
@@ -169,7 +169,10 @@ export default function App() {
     const handle = setTimeout(() => {
       void (async () => {
         const toks = await lexSource(source);
-        if (toks.length) {
+        const hasNonNewline = toks.some(
+          (t) => t.tokenType.toUpperCase() !== "NEWLINE"
+        );
+        if (hasNonNewline) {
           await syntaxSource();
         } else {
           setValidation(null);

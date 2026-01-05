@@ -504,7 +504,7 @@ def _token_type(kind: str) -> str:
 def tokens_as_rows(tokens: Iterable[Token]) -> List[dict]:
     rows: List[dict] = []
     for tok in tokens:
-        if tok.kind in {"EOF", "NEWLINE"}:
+        if tok.kind in {"EOF"}:
             continue
         rows.append(
             {
